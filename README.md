@@ -1,2 +1,2 @@
 # ml-tep-PbTe
-Machine Learning Model Predicting Thermoelectric Properties of BiTe-based materials ver.0.2a
+Machine Learning Model Predicting Thermoelectric Properties of PbTe-based materials ver.0.1a
