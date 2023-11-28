@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script type="text/javascript" src="ann.js"></script>
+    <title>Test for ann.js</title>
+    <script>
+        "use strict";
+        window.onload = function() {
+            const div1 = document.getElementById("div1");
+
+            console.log("Testing ann.js ...");
+
+            testMatrix();
+            testLayer();
+            testFullyConnectedNeuralNetwork();
+            testLatentSpaceNeuralNetwork();
+        };
+
+        function testMatrix() {
+            console.log("Testing 'Matrix' class ...");
+            try {
+                let matrix = new Matrix(2, 2, [1, 2, 3]);
+            } catch(e) {
+                console.log(`Ok: Expected Error: ${e}`);
+            }
+            let matrix1 = new Matrix(2, 3, [1, 2, 3, 4, 5, 6]);
+            // 'row' and 'col' starts with zero.
+            console.assert(matrix1.getElement(1, 0) == 4.0);
+            matrix1.setElement(1, 1, 1.0);  // now 'matrix1.array == [1, 2, 3, 4, 1, 6]'.
+            console.assert(matrix1.getElement(1, 1) == 1.0);
+            // test 'setElement'.
+            let matrix2 = new Matrix(3, 1);
+            console.assert(matrix2.isEqualAsArray([0, 0, 0]));  // initial value is zero.
+            matrix2.setElement(1, 0, 1.0);
+            matrix2.setElement(2, 0, 2.0);  // now 'matrix2.array == [0, 1, 2]'.
+            // test 'multiply'.
+            let outputMatrix = new Matrix(2, 1);
+            matrix1.multiply(matrix2, outputMatrix);
+            console.assert(outputMatrix.isEqualAsArray([8, 13]));
+            console.assert(!matrix1.hasSameSize(matrix2));
+            // test 'plus'.
+            let matrix3 = new Matrix(2, 3, [-1, -2, -3, -4, -1, -5]);
+            let outputMatrix2 = new Matrix(2, 3);
+            matrix1.plus(matrix3, outputMatrix2);
+            console.assert(outputMatrix2.isEqualAsArray([0, 0, 0, 0, 0, 1]));
+            // test 'composition'
+            let matrix4 = new Matrix(3, 1);
+            matrix2.composition((x) => x*x, matrix4);
+            console.assert(matrix4.isEqualAsArray([0, 1, 4]));
+        }
+        function testLayer() {
+            console.log("Testing 'Layer' class ...");
+            try {
+                let layer = new Layer(2, 1, [1, 2], [1], 'unknownActivation');
+            } catch(e) {
+                console.log(`Ok: Expected Error: ${e}`);
+            }
+            // test 'evaluate' with linear activation.
+            let layerLin = new Layer(3, 2, [1, 2, 3, 4, 5, 6], [1, 2], 'linear');
+            let inputLin = new Matrix(3, 1, [3, 2, 1]);
+            layerLin.evaluate(inputLin);
+            console.assert(layerLin.outputMatrix.isEqualAsArray([11, 30]));
+            // test 'evaluate' with ELU activation.
+            let layerElu = new Layer(3, 2, [4, 2, 3, -Math.LN2, 5, 6], [0, 0], 'elu');
+            let inputElu = new Matrix(3, 1, [1, 0, 0]);
+            layerElu.evaluate(inputElu);
+            console.assert(layerElu.outputMatrix.isEqualAsArray([4, -0.5]));
+        }
+        function testFullyConnectedNeuralNetwork() {
+            console.log("Testing 'FullyConnectedNeuralNetwork' class ...");
+            let fcnn = new FullyConnectedNeuralNetwork(3, 
+                [[1, 2, 3, 4, 5, 6], [1, 0, 0, 1], [2, -1]],
+                [[1, 2], [-1, -10], [0]],
+                ['linear', 'linear', 'linear']
+            );
+            console.assert(fcnn.nOutputs == 1);
+            let inputMatrix = new Matrix(3, 1, [3, 2, 1]);
+            fcnn.evaluate(inputMatrix);            
+            console.assert(fcnn.outputMatrix.isEqualAsArray([0]));
+        }
+        function testLatentSpaceNeuralNetwork() {
+            console.log("Testing 'LatentSpaceNeuralNetwork' class ...");
+            let embeddingNet = new FullyConnectedNeuralNetwork(2,
+                [[1, 2]],
+                [[0]],
+                ['linear']
+            );
+            let dictionaryNet = new FullyConnectedNeuralNetwork(2,
+                [[2, 3]],
+                [[1]],
+                ['linear']
+            );            
+            let lann = new LatentSpaceNeuralNetwork(embeddingNet, dictionaryNet);
+            let inputMatrix = new Matrix(3, 1, [1, 2, 3]);
+            lann.evaluate(inputMatrix);
+            console.assert(lann.outputMatrix.isEqualAsArray([20]));
+            // performance test
+            console.time("LaNN_1000_iterations");
+            for (let i=0; i<1000; i++) {
+                lann.evaluate(inputMatrix);
+            }
+            console.timeEnd("LaNN_1000_iterations");
+        }
+    </script>
+</head>
+<body>
+    <div>Testing ann.js: check the console</div>
+    <div>programmed by Dr. Jaywan Chung at Korea Electrotechnology Research Institute</div>
+    <div>v0.1 updated on Sep 13, 2023</div>
+</body>
+</html>
